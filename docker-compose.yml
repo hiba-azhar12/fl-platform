@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+
+  fl-server:
+    build: ./server
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./certs:/certs
+    environment:
+      - NUM_ROUNDS=10
+      - MIN_CLIENTS=4
+    networks:
+      - fl-network
+
+  bank-a:
+    build: ./client
+    environment:
+      - BANK_ID=bank_a
+      - TRAIN_PATH=/data/train_A.parquet
+      - TEST_PATH=/data/test_A.parquet
+      - SERVER_ADDRESS=fl-server:8080
+    volumes:
+      - ./data:/data
+      - ./certs:/certs
+    depends_on:
+      - fl-server
+    networks:
+      - fl-network
+
+  bank-b:
+    build: ./client
+    environment:
+      - BANK_ID=bank_b
+      - TRAIN_PATH=/data/train_B.parquet
+      - TEST_PATH=/data/test_B.parquet
+      - SERVER_ADDRESS=fl-server:8080
+    volumes:
+      - ./data:/data
+      - ./certs:/certs
+    depends_on:
+      - fl-server
+    networks:
+      - fl-network
+
+  bank-c:
+    build: ./client
+    environment:
+      - BANK_ID=bank_c
+      - TRAIN_PATH=/data/train_C.parquet
+      - TEST_PATH=/data/test_C.parquet
+      - SERVER_ADDRESS=fl-server:8080
+    volumes:
+      - ./data:/data
+      - ./certs:/certs
+    depends_on:
+      - fl-server
+    networks:
+      - fl-network
+
+  bank-d:
+    build: ./client
+    environment:
+      - BANK_ID=bank_d
+      - TRAIN_PATH=/data/train_D.parquet
+      - TEST_PATH=/data/test_D.parquet
+      - SERVER_ADDRESS=fl-server:8080
+    volumes:
+      - ./data:/data
+      - ./certs:/certs
+    depends_on:
+      - fl-server
+    networks:
+      - fl-network
+
+networks:
+  fl-network:
+    driver: bridge
