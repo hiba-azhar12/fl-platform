@@ -58,17 +58,21 @@ class BankFraudClient(fl.client.NumPyClient):
         return model_to_params(self.model)
 
     def fit(self, parameters, config):
-        self.model.fit(self.X_train, self.y_train)
-        
-        # Récupérer les vrais paramètres
-        raw_params = model_to_params(self.model)
-        
-        # Appliquer DP sur les paramètres AVANT envoi
-        protected_params = privacy.apply_dp_noise(raw_params, sigma=0.1, C=1.0)
-        
-        print(f"[{self.bank_id}] DP appliqué sur les poids ✓")
-        return protected_params, len(self.X_train), {}
-
+            # 1. Entraînement local
+            self.model.fit(self.X_train, self.y_train)
+            
+            # 2. Récupérer les paramètres réels (poids du modèle)
+            raw_params = model_to_params(self.model)
+            
+            # 3. MODIFICATION HONNÊTE : Appliquer la DP sur les POIDS, pas sur les prédictions
+            # C'est ici que privacy.py intervient réellement
+            protected_params = privacy.apply_dp_noise(raw_params, sigma=0.1, C=1.0)
+            
+            print(f"[{self.bank_id}] Round terminé — DP appliquée sur les poids envoyés ✓")
+            
+            # On renvoie les paramètres BRUITÉS au serveur
+            return protected_params, len(self.X_train), {}
+    
     def evaluate(self, parameters, config):
         y_pred = self.model.predict(self.X_test)
         f1 = f1_score(self.y_test, y_pred, zero_division=0)

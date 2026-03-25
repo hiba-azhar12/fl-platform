@@ -12,15 +12,16 @@ def create_context():
     return context
 
 def apply_dp_noise(params, sigma=0.1, C=1.0):
-    """Applique DP sur les vrais paramètres envoyés au serveur"""
+    """Applique le clipping et le bruit gaussien sur les paramètres du modèle."""
     noisy_params = []
     for p in params:
         p_float = p.astype(np.float32)
-        # Clipping
+        # Clipping (limiter l'influence d'un nœud)
         norm = np.linalg.norm(p_float)
         if norm > C:
-            p_float = p_float * C / norm
-        # Bruit gaussien
+            p_float = p_float * (C / norm)
+        # Ajout du bruit
         noise = np.random.normal(0, sigma * C, size=p_float.shape)
+        # Retour au format attendu par Flower (uint8 pour la sérialisation LightGBM)
         noisy_params.append((p_float + noise).astype(np.uint8))
     return noisy_params
